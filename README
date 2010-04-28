@@ -2,3 +2,5 @@ Sample code to demonstrate a design for building hot-swappable binaries, by Eric
 Provided free to use, modify, distribute, make piles of money off, etc. 
 
 Requires: Google protocol buffers (c++). The makefiles assumes sources are in /usr/include/google and library is in /usr/lib/.
+
+See http://www.thelowlyprogrammer.com/2010/04/robustly-hot-swapping-binaries-with.html for the design and basic usage.
