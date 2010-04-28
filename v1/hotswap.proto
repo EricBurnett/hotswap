@@ -1,5 +1,7 @@
 message ProgramState {
   // Next tag = 6
+  // Tag fields should NEVER be re-used. Either leave them in the proto file
+  // as-is, or mark them deprecated.
   // All new fields MUST be optional.
 
   optional string initial_version = 1 [default = "0.0"];
@@ -11,7 +13,7 @@ message ProgramState {
     STATE_ERROR = 2;
 
     // Program states. Unknown state transitions lead to ERROR and terminate the
-    // program.
+    // program, so should be avoided at all costs.
     STATE_INIT = 3;
     STATE_PROCESS_LINE = 4;
   }
@@ -21,8 +23,7 @@ message ProgramState {
 
   //-------------------------------------------------------
   // Fields for PROCESS_LINE. 
-  repeated string files = 4;
-  optional int32 current_file = 5 [default = 0];
-  optional int32 current_line = 6 [default = 0];
+  optional string line_text = 4 [default = ""];
+  optional int32 line_count = 5 [default = 0];
 }
     

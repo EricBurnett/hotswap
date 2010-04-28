@@ -4,14 +4,114 @@
 #include <iostream>
 #include <string>
 #include <sys/wait.h>
+#include <termios.h>
+#include <unistd.h>
 
 #include "hotswap.h"
-#include "hotswap.pb.h"
 
 using namespace std;
 
 const char* VERSION	    = "0.1";
 const char* HOTSWAP_COMMAND = "--hotswapping";
+
+void init(int argc, char** argv, ProgramState& state) {
+    state.set_cur_state(ProgramState::STATE_INIT);
+}
+
+ReturnCode runStateMachine(ProgramState& state) {
+    cerr << "Running state machine\n";
+
+    // Put stdin into non-blocking, raw mode, so we can watch for character
+    // input one keypress at a time.
+    setStdinBlocking(false);
+
+    while (true) {
+	ProgramState::State next;
+	switch (state.cur_state()) {
+	    case ProgramState::STATE_INIT:
+		next = runState_init(state);
+		break;
+
+	    case ProgramState::STATE_PROCESS_LINE:
+		next = runState_process_line(state);
+		break;
+
+	    case ProgramState::STATE_DONE:
+		setStdinBlocking(true);
+		return SUCCESS;
+
+	    case ProgramState::STATE_NONE:
+	    case ProgramState::STATE_ERROR:
+	    default:
+		setStdinBlocking(true);
+		return FAILURE;
+	}
+
+	ProgramState::State cur = state.cur_state();
+	state.set_prev_state(cur);
+	state.set_cur_state(next);
+
+	// For now, simply let the user decide when to swap and quit. We can
+	// always change this later.
+	ReturnCode code = checkForUserSignal();
+	if (code != CONTINUE) {
+	    setStdinBlocking(true);
+	    return code;
+	}
+    }
+}
+
+ProgramState::State runState_init(ProgramState& state) {
+    cout << "Please provide a line of text for me to repeat ad-nauseum\n";
+    string line;
+    setStdinBlocking(true);
+    getline(cin, line);
+    setStdinBlocking(false);
+    state.set_line_text(line);
+    cout << "Thanks!\n";
+    state.set_line_count(0);
+
+    return ProgramState::STATE_PROCESS_LINE;
+}
+
+ProgramState::State runState_process_line(ProgramState& state) {
+    int count = state.line_count();
+    string line = state.line_text();
+    cout << count << ": " << line << endl;
+    state.set_line_count(count+1);
+    sleep(1);
+
+    return ProgramState::STATE_PROCESS_LINE;
+}
+
+ReturnCode checkForUserSignal() {
+    // We had better be in non-blocking mode, or this is going to block.
+    char c;
+    while ((c = getc(stdin)) != EOF) {
+	if (c == 'u') {
+	    cout << endl;
+	    return SWAP;
+	} else if (c == 'q') {
+	    cout << endl;
+	    return SUCCESS;
+	}
+    }
+    return CONTINUE;
+}
+
+void setStdinBlocking(bool block) {
+    const int fd = fileno(stdin);
+    termios flags;
+    tcgetattr(fd,&flags);
+    flags.c_lflag &= ~ICANON; // set raw (unset canonical modes)
+    flags.c_cc[VMIN] = block? 1 : 0; // i.e. min 1 char for blocking, 0 chars for non-blocking
+    flags.c_cc[VTIME] = 0; // block if waiting for char
+    tcsetattr(fd,TCSANOW,&flags);
+}
+
+//------------------------------------------------------------------------------
+// The code from here down is framework code, to handle the work of swapping
+// binaries. No need to touch it generation to generation.
 
 int main(int argc, char** argv) {
     cerr << "HotSwap example started - version " << VERSION << endl;
@@ -37,8 +137,8 @@ int main(int argc, char** argv) {
     } else {
 	// Initialize state
 	cerr << "Initial call\n";
-	state.set_cur_state(ProgramState::STATE_INIT);
-	state.set_initial_version(VERSION);	
+	state.set_initial_version(VERSION);
+	init(argc, argv, state);	
     }
 
     int code = -1;
@@ -57,19 +157,6 @@ int main(int argc, char** argv) {
 
     cerr << "Terminating with code " << code << endl;
     return code;
-}
-
-ReturnCode runStateMachine(ProgramState& state) {
-    cerr << "Running state machine\n";
-
-    char c = getchar();
-    if (c == 'u') {
-	return SWAP;
-    } else if (c == 'e') {
-	return FAILURE;
-    }
-
-    return SUCCESS;
 }
 
 void swapToNewVersion(char* path, ProgramState& state) {
