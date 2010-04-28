@@ -85,7 +85,8 @@ ProgramState::State runState_process_line(ProgramState& state) {
 }
 
 ReturnCode checkForUserSignal() {
-    // We had better be in non-blocking mode, or this is going to block.
+    // We had better be in non-blocking mode, or this is going to bring
+    // everything to a screeching halt.
     char c;
     while ((c = getc(stdin)) != EOF) {
 	if (c == 'u') {
