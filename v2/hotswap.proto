@@ -1,0 +1,32 @@
+message ProgramState {
+  // Next tag = 8
+  // Tag fields should NEVER be re-used. Either leave them in the proto file
+  // as-is, or mark them deprecated.
+  // All new fields MUST be optional.
+
+  optional string initial_version = 1 [default = "0.0"];
+  optional int32 generation	  = 6 [default = 1];
+
+  enum State {
+    // Special states supported by the program infrastructure.
+    STATE_NONE = 0;
+    STATE_DONE = 1;
+    STATE_ERROR = 2;
+
+    // Program states. Unknown state transitions lead to ERROR and terminate the
+    // program, so should be avoided at all costs.
+    STATE_INIT 		= 3;
+    STATE_PROCESS_LINE 	= 4;
+    STATE_MUTATE_LINE 	= 5;
+  }
+
+  optional State prev_state = 2 [default = STATE_NONE];
+  optional State cur_state  = 3 [default = STATE_ERROR];
+
+  //-------------------------------------------------------
+  // Fields for PROCESS_LINE. 
+  optional string line_text = 4 [default = ""];
+  optional int32 line_count = 5 [default = 0];
+  optional int32 num_mutations = 7 [default = 10];
+}
+    
