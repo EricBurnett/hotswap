@@ -6,18 +6,18 @@ message ProgramState {
 
   enum State {
     // Special states supported by the program infrastructure.
-    NONE = 0;
-    DONE = 1;
-    ERROR = 2;
+    STATE_NONE = 0;
+    STATE_DONE = 1;
+    STATE_ERROR = 2;
 
     // Program states. Unknown state transitions lead to ERROR and terminate the
     // program.
-    INIT = 3;
-    PROCESS_LINE = 4;
+    STATE_INIT = 3;
+    STATE_PROCESS_LINE = 4;
   }
 
-  required State prev_state = 2 [default = NONE];
-  required State cur_state  = 3 [default = ERROR];
+  optional State prev_state = 2 [default = STATE_NONE];
+  optional State cur_state  = 3 [default = STATE_ERROR];
 
   //-------------------------------------------------------
   // Fields for PROCESS_LINE. 

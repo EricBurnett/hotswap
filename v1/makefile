@@ -1,4 +1,4 @@
-hotswap: hotswap.cpp hotswap.pb
+hotswap: hotswap.cpp hotswap.h hotswap.pb
 	g++ -I/usr/include -L/usr/lib/ hotswap.cpp hotswap.pb.cc -o ../bin/hotswap.out -lprotobuf
 
 hotswap.pb: hotswap.proto
