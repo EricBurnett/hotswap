@@ -1,0 +1,28 @@
+message ProgramState {
+  // Next tag = 6
+  // All new fields MUST be optional.
+
+  optional string initial_version = 1 [default = "0.0"];
+
+  enum State {
+    // Special states supported by the program infrastructure.
+    NONE = 0;
+    DONE = 1;
+    ERROR = 2;
+
+    // Program states. Unknown state transitions lead to ERROR and terminate the
+    // program.
+    INIT = 3;
+    PROCESS_LINE = 4;
+  }
+
+  required State prev_state = 2 [default = NONE];
+  required State cur_state  = 3 [default = ERROR];
+
+  //-------------------------------------------------------
+  // Fields for PROCESS_LINE. 
+  repeated string files = 4;
+  optional int32 current_file = 5 [default = 0];
+  optional int32 current_line = 6 [default = 0];
+}
+    

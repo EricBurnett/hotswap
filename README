@@ -1,0 +1,4 @@
+Sample code to demonstrate a design for building hot-swappable binaries, by Eric Burnett.
+Provided free to use, modify, distribute, make piles of money off, etc. 
+
+Requires: Google protocol buffers (c++). The makefiles assumes sources are in /usr/include/google and library is in /usr/lib/.
